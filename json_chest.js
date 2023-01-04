@@ -72,6 +72,9 @@ class JsonChest{
 		
 		// Then link the references separately
 		this.JcLoadSlaveReferences(data, this);
+		
+		// Finally trigger JcOnLoad()
+		this.JcTriggerOnLoad();
 	}
 	
 	JcLoadFromJson(json){
@@ -87,6 +90,14 @@ class JsonChest{
 	JcLoadSlaveReferences(data, master){
 		for (let v = 0; v < this.jc_vars.length; v++){
 			this.jc_vars[v].LoadReferences(data, master);
+		}
+	}
+		
+	JcTriggerOnLoad(){
+		this.JcOnLoad();
+		
+		for (let v = 0; v < this.jc_vars.length; v++){
+			this.jc_vars[v].TriggerOnLoad();
 		}
 	}
 	
@@ -135,6 +146,10 @@ class JsonChest{
 	
 	JcLog(text){
 		console.log("[JC] + " + text);
+	}
+	
+	JcOnLoad(){
+		// This is called after the object has been loaded
 	}
 }
 
@@ -185,12 +200,26 @@ class JsonChestVar{
 	}
 	
 	LoadReferences(data, master){
-		switch(this.type){
-			case JsonChest.OBJECT_REFERENCE: return this.LoadObjectReference(data, master);
-			case JsonChest.OBJECT_REFERENCE_LIST: return this.LoadObjectReferenceList(data, master);
+		// Reference own vars
+		if (this.type == JsonChest.OBJECT_REFERENCE){
+			return this.LoadObjectReference(data, master);
 			
-			default: return true;
+		}else if(this.type == JsonChest.OBJECT_REFERENCE_LIST){
+			return this.LoadObjectReferenceList(data, master);
+			
+		// Reference children's vars
+		}else if(this.type == JsonChest.OBJECT){
+			return this.jc[this.attribute].JcLoadSlaveReferences(data[this.name], master);
+			
+		}else if(this.type == JsonChest.OBJECT_LIST){
+			for (let o = 0; o < this.jc[this.attribute].length; o++){
+				this.jc[this.attribute][o].JcLoadSlaveReferences(data[this.name][o], master);
+			}
+			
+			return true;
 		}
+		
+		return true;
 	}
 	
 	/* -------- SAVE / LOAD FUNCTIONS -------- */
@@ -237,7 +266,7 @@ class JsonChestVar{
 		let new_object;
 		
 		try{
-			new_object = this.object_create(this.name);
+			new_object = this.object_create(this.name, data[this.name]);
 			
 		}catch(error){
 			this.Log("Error: Failed to create new object. (" + error + ")");
@@ -288,7 +317,7 @@ class JsonChestVar{
 			let new_object;
 			
 			try{
-				new_object = this.object_create(this.name);
+				new_object = this.object_create(this.name, data[this.name][o]);
 				
 			}catch(error){
 				this.Log("Error: Failed to create new object. (" + error + ")");
@@ -312,6 +341,10 @@ class JsonChestVar{
 	LoadObjectReference(data, master){
 		let object = master.JcGetObjectByID(data[this.name]);
 		this.jc[this.attribute] = object;
+		
+		if (object == null){
+			this.Log("Error: Unable to find reference to object with JC ID: " + data[this.name].toString());
+		}
 	}
 	
 	SaveObjectReferenceList(data, master){
@@ -328,6 +361,10 @@ class JsonChestVar{
 		for (let o = 0; o < data[this.name].length; o++){
 			let object = master.JcGetObjectByID(data[this.name][o]);
 			this.jc[this.attribute].push(object);
+			
+			if (object == null){
+				this.Log("Error: Unable to find reference to object with JC ID: " + data[this.name].toString());
+			}
 		}
 	}
 	
@@ -363,6 +400,18 @@ class JsonChestVar{
 		}
 		
 		return null;
+	}
+	
+	TriggerOnLoad(){
+		if (this.type == JsonChest.OBJECT){
+			return this.jc[this.attribute].JcTriggerOnLoad();
+		}
+		
+		if (this.type == JsonChest.OBJECT_LIST){
+			for (let o = 0; o < this.jc[this.attribute].length; o++){
+				return this.jc[this.attribute][o].JcTriggerOnLoad();
+			}
+		}
 	}
 	
 	Log(text){

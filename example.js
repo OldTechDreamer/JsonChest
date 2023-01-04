@@ -7,7 +7,7 @@ class Pony extends JsonChest{
 		this.JcAddSet("Name", "name", name, JsonChest.VAR);
 		
 		// Create this.items array to store Item objects
-		this.JcAddSet("Items", "items", [], JsonChest.OBJECT_LIST, function(name){
+		this.JcAddSet("Items", "items", [], JsonChest.OBJECT_LIST, function(name, object_json_data){
 			// This is called when Pony is loaded and needs to know what object "Item" is
 			return new Item("Unknown item", 0);
 		});
