@@ -265,12 +265,19 @@ class JsonChestVar{
 		// Create the object
 		let new_object;
 		
-		try{
-			new_object = this.object_create(this.name, data[this.name]);
+		// Assume the object already exists
+		if (this.object_create == null){
+			new_object = this.jc[this.attribute];
 			
-		}catch(error){
-			this.Log("Error: Failed to create new object. (" + error + ")");
-			return false;
+		}else{
+			// Create new object
+			try{
+				new_object = this.object_create(this.name, data[this.name]);
+				
+			}catch(error){
+				this.Log("Error: Failed to create new object. (" + error + ")");
+				return false;
+			}
 		}
 		
 		// Load it
@@ -309,26 +316,34 @@ class JsonChestVar{
 	LoadObjectList(data, master){
 		let errors = false;
 		
-		// Create empty object list
-		this.jc[this.attribute] = [];
-		
-		for (let o = 0; o < data[this.name].length; o++){
-			// Create the object
-			let new_object;
-			
-			try{
-				new_object = this.object_create(this.name, data[this.name][o]);
-				
-			}catch(error){
-				this.Log("Error: Failed to create new object. (" + error + ")");
-				errors = true;
+		// Assume the objects already exists
+		if (this.object_create == null){
+			for (let o = 0; o < this.jc[this.attribute].length; o++){
+				this.jc[this.attribute][o].JcLoadSlave(data[this.name][o], master);
 			}
 			
-			// Load it
-			new_object.JcLoadSlave(data[this.name][o], master);
+		}else{
+			// Create empty object list
+			this.jc[this.attribute] = [];
 			
-			// Assign
-			this.jc[this.attribute].push(new_object);
+			for (let o = 0; o < data[this.name].length; o++){
+				// Create the object
+				let new_object;
+				
+				try{
+					new_object = this.object_create(this.name, data[this.name][o]);
+					
+				}catch(error){
+					this.Log("Error: Failed to create new object. (" + error + ")");
+					errors = true;
+				}
+				
+				// Load it
+				new_object.JcLoadSlave(data[this.name][o], master);
+				
+				// Assign
+				this.jc[this.attribute].push(new_object);
+			}
 		}
 		
 		return errors;

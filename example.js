@@ -49,7 +49,6 @@ class Item extends JsonChest{
 		this.JcAddSet("Quantity", "quantity", quantity, JsonChest.VAR);
 	}
 }
-
 // Create a pony and save it
 let twilight = new Pony("Twilight Sparkle");
 
@@ -70,5 +69,4 @@ console.log("\n");
 // Now create an empty pony and load the saved data
 let pony = new Pony("A horse with no name");
 pony.JcLoad(twilight_data);
-
 pony.PrintInfo();
