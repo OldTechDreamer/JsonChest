@@ -62,5 +62,5 @@ Like JcSave, except a JSON string is returned.
 ### `JcLoadFromJson(json)`
 Like JcLoad, except it takes a JSON string.
 
-### `JcJcOnLoad()`
+### `JcOnLoad()`
 This does nothing, but is called from Json Chest after a Load. It can be declared in your class to run something after the class has been loaded. 
